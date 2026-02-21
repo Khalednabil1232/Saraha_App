@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import { DB_URI } from "../../config/config.service.js";
 
 const checkConnectionDB = async () => {
-    await mongoose.connect("mongodb://127.0.0.1:27017/SarhaAPP1", {serverSelectionTimeoutMS: 5000,})
+    await mongoose.connect(DB_URI, {serverSelectionTimeoutMS: 5000})
     .then(()=>{
-        console.log(`DB Connected Successfully...✅`);  
+        console.log(`DB Connected Successfully to ${DB_URI}...✅`);  
     })
     .catch((error)=>{
         console.log(error,` DB Failed TO connect..❌`);
