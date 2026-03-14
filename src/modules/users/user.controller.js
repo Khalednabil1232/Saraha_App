@@ -26,6 +26,7 @@ userRouter.get("/profile",authentication,US.getProfile)
 userRouter.patch("/update-profile",authentication,validation(UV.updateProfileSchema),US.updateProfile)
 userRouter.get("/share-profile/:id",validation(UV.shareProfileSchema),US.shareProfile)
 userRouter.patch("/update-password",authentication,validation(UV.updatePasswordSchema),US.updatePassword)
+userRouter.post("/logout",authentication,US.logout)
 
 
 
