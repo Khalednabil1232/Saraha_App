@@ -1,4 +1,3 @@
-
 import express from "express";
 import checkConnectionDB from "./DB/connectionDB.js";
 import userRouter from "./modules/users/user.controller.js";
@@ -6,6 +5,7 @@ import cors from "cors"
 import { PORT } from "../config/config.service.js";
 import { redisClient, redisConnection } from "./DB/redis/redis.db.js";
 import { set } from "mongoose";
+import messageRouter from "./modules/messages/message.controller.js";
 
 const app = express();
 const port = PORT
@@ -28,7 +28,9 @@ const bootstrap = async () => {
 
 
     app.use("/uploads",express.static("uploads"))
+    // routes
     app.use("/users",userRouter)
+    app.use("/messages",messageRouter)
 
     app.get("/",(req,res,next)=>{
         res.status(200).json({message:`Welcome ON Saraha APP ...💬`})
