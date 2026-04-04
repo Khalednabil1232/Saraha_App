@@ -2,19 +2,39 @@ import express from "express";
 import checkConnectionDB from "./DB/connectionDB.js";
 import userRouter from "./modules/users/user.controller.js";
 import cors from "cors"
-import { PORT } from "../config/config.service.js";
+import { PORT, WHITE_LIST } from "../config/config.service.js";
 import { redisClient, redisConnection } from "./DB/redis/redis.db.js";
 import { set } from "mongoose";
 import messageRouter from "./modules/messages/message.controller.js";
+import helmet from "helmet";
+import {rateLimit} from "express-rate-limit";
 
 const app = express();
 const port = PORT
 
 const bootstrap = async () => {
-    
 
+    const limiter = rateLimit({
+        windowMs: 60 * 30 * 1000, // 15 minutes
+        limit: 3, // limit each IP to 100 requests per windowMs
+        message : {message:"Too many requests from this IP, please try again after 15 minutes...⏳"}
+});
+
+    const corsOptions = {
+    origin: function (origin, callback) {
+    if([...WHITE_LIST,undefined].includes(origin)){
+        callback(null, true)
+    }else{
+        callback(new Error(`Origin ${origin} Not Allowed By CORS...❌`))
+}
+    }
+    }
+
+    // middlewares
     app.use(express.json())
-    app.use(cors())
+    app.use(helmet(),limiter) // بتضيف هيدرز للريسبونس بتاعك عشان تحمي ابلكيشن بتاعك من بعض الثغرات الامنية المعروفة
+     // بتحدد عدد الريكوستات اللي ممكن يرسلها كل يوزر في فترة زمنية معينة عشان تحمي ابلكيشن بتاعك من الهجمات اللي بتعتمد علي ارسال عدد كبير من الريكوستات في وقت قصير زي هجمات DDoS مثلا
+    app.use(cors(corsOptions)) // cross origin resource sharing , بتسمح لفرونت اند من دومين تاني انه يتواصل مع السيرفر بتاعك
 
     // db connection
     checkConnectionDB()

@@ -15,7 +15,7 @@ import { compare } from "bcrypt";
 import { hash, randomUUID } from "node:crypto";
 import { deletekey, get_key, incr, keys, max_otp_key, otp_key, revoke_key, setValue, ttl, get, block_otp_key } from "../../DB/redis/redis.service.js";
 import { genertaeOtp, sendEmail } from "../../common/utils/email/send.email.js";
-import { emailTemplate } from "../../common/utils/email/email.template.js";
+import { emailTempaletLink, emailTemplate } from "../../common/utils/email/email.template.js";
 import { eventEmitter } from "../../common/utils/email/email.events.js";
 // express > version 5 بتعملها لوحدها 
 // const asyncHandler = (fn)=>{ 
@@ -515,3 +515,87 @@ export const logout = async (req, res, next) => {
     successResponse({res})
 
 }
+
+
+export const forgetPasswordLink = async (req, res, next) => {
+    const { email } = req.body;
+
+    const user = await db_service.findOne({
+        model: userModel,
+        filter: {
+            email,
+            provider: ProviderEnum.system,
+            confirmed: true
+        }
+    });
+
+    if (!user) {
+        throw new Error("user not found", { cause: 404 });
+    }
+
+    const token = GenerateToken({
+        payload: { email },
+        secret_key: SECRET_KEY,
+        options: {
+            expiresIn: "10m"
+        }
+    });
+
+    const link = `http://localhost:3000/forget-password-link/${token}`;
+
+    await sendEmail({
+        to: email,
+        subject: "Reset your password",
+        html: emailTempaletLink(link)
+    });
+
+    await setValue({
+        key: `reset_token::${token}`,
+        value: 1,
+        ttl: 60 * 10
+    });
+
+    successResponse({ res, message: "check your email" });
+};
+
+
+export const resetPasswordLink = async (req, res, next) => {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const decoded = VerifyToken({
+        token,
+        secret_key: SECRET_KEY
+    });
+
+    if (!decoded?.email) {
+        throw new Error("invalid token");
+    }
+
+    const tokenKey = `reset_token::${token}`;
+
+    const exists = await get(tokenKey);
+    if (!exists) {
+        throw new Error("token expired or already used");
+    }
+
+    const user = await db_service.findOneAndUpdate({
+        model: userModel,
+        filter: {
+            email: decoded.email,
+            provider: ProviderEnum.system
+        },
+        update: {
+            password: await Hash({ plainText: password, salt_rounds: SALT_ROUNDS }),
+            changeCredential: new Date()
+        }
+    });
+
+    if (!user) {
+        throw new Error("user not found", { cause: 404 });
+    }
+
+    await deletekey(tokenKey);
+
+    successResponse({ res, message: "password updated" });
+};

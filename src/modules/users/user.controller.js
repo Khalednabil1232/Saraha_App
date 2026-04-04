@@ -7,11 +7,10 @@ import { RoleEnum } from "../../common/enum/user.enum.js";
 import { validation } from "../../common/middleware/validation.js";
 import { multer_local, multer_server } from "../../common/middleware/multer.js";
 import { multer_enum } from "../../common/enum/multer.enum.js";
+import messageRouter from "../messages/message.controller.js";
+const userRouter = Router({caseSensitive:true , strict:true ,})
 
-const userRouter = Router()
-
-
-
+userRouter.use("/:userId,messages",messageRouter)
 
 userRouter.post("/signUp",
     multer_server(multer_enum.image).single("attachment"),
@@ -35,6 +34,10 @@ userRouter.patch("/update-profile",authentication,validation(UV.updateProfileSch
 userRouter.get("/share-profile/:id",validation(UV.shareProfileSchema),US.shareProfile)
 userRouter.patch("/update-password",authentication,validation(UV.updatePasswordSchema),US.updatePassword)
 userRouter.post("/logout",authentication,US.logout)
+
+userRouter.patch("/forget-password-Link", validation(UV.forgetPasswordLinkSchema),US.forgetPasswordLink)
+userRouter.patch("/reset-password-Link/:token", validation(UV.resetPasswordLinkSchema),US.resetPasswordLink)
+
 
 
 

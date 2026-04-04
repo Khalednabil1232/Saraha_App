@@ -87,3 +87,30 @@ export const updatePasswordSchema = {
 
     }).required()
 }
+
+
+export const forgetPasswordLinkSchema =
+{
+    body:joi.object(
+        {
+            email: general_rules.email.required(),
+        }
+    ).required()
+}
+
+
+export const resetPasswordLinkSchema =
+{
+
+    body: joi.object({
+        password: general_rules.password.required(),
+
+        cPassword: joi.string()
+            .valid(joi.ref("password"))
+            .required()
+    }).required(),
+
+    params: joi.object({
+        token: joi.string().required()
+    }).required()
+}

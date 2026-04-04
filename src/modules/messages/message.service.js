@@ -55,8 +55,11 @@ export const getMessage = async (req,res,next) => {
 
 
 export const getMessages = async (req,res,next) => {
-
+    
+    console.log(req.params.userId,"userId");
+    
     const messages = await db_service.find({
+
         model:"messageModel",
         filter:{
             userId: req.user._id

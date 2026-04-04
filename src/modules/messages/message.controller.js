@@ -6,14 +6,14 @@ import { validation } from "../../common/middleware/validation.js";
 import { multer_enum } from "../../common/enum/multer.enum.js";
 import { authentication } from "../../common/middleware/authentication.js";
 
-const messageRouter = Router()
+const messageRouter = Router({mergeParams:true}) // لازم عشان اخد ال userId من ال params بتاع ال userRouter
 
 messageRouter.post("/send" ,
     multer_local({
         custom_path:"messages",
         custom_types:multer_enum.image
     }).array("attachments" , 3) ,
-    validation(MV.sendMessageSchema) ,
+    validation(MV.signInSchema) ,
     MS.sendMessage
 )
 
